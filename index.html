@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>辯論計時器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        affirmative: '#4CAF50',
+                        negative: '#F44336'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <h1 class="text-3xl font-bold text-center mb-8 text-primary">辯論計時器</h1>
+        
+        <!-- 設置頁面 -->
+        <div id="setupPage" class="mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">辯論設置</h2>
+                
+                <div class="mb-4">
+                    <label for="debateTopic" class="block text-sm font-medium mb-1">辯論題目</label>
+                    <input type="text" id="debateTopic" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" placeholder="請輸入辯論題目...">
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="affirmativeTeam" class="block text-sm font-medium mb-1">正方隊伍名稱</label>
+                        <input type="text" id="affirmativeTeam" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" placeholder="正方" value="正方">
+                    </div>
+                    <div>
+                        <label for="negativeTeam" class="block text-sm font-medium mb-1">反方隊伍名稱</label>
+                        <input type="text" id="negativeTeam" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" placeholder="反方" value="反方">
+                    </div>
+                </div>
+
+            </div>
+            
+            <div id="standardRoundsSetup" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">賽程設置</h2>
+                <div id="rounds" class="space-y-4 mb-4">
+                    <!-- 賽程項目會動態添加在這裡 -->
+                </div>
+                
+                <button id="addRound" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors">
+                    添加環節
+                </button>
+            </div>
+            
+            <div class="text-center">
+                <button id="startDebate" class="px-6 py-3 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors text-lg font-semibold">
+                    開始辯論
+                </button>
+            </div>
+        </div>
+        
+        <!-- 計時頁面 -->
+        <div id="timerPage" class="hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 text-center">
+                <h2 id="currentTopic" class="text-xl font-bold mb-4 break-words"></h2>
+                
+                <!-- Standard Timer Display -->
+                <div id="standardTimerDisplay">
+                    <div id="currentRoundInfo" class="text-lg font-semibold mb-2"></div>
+                    <div id="currentSpeaker" class="text-3xl font-bold mb-2"></div>
+                    <div class="mb-8">
+                        <div id="timer" class="text-6xl font-bold mb-2">00:00</div>
+                        <div id="progressBar" class="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div id="progress" class="h-full bg-primary transition-all duration-1000" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Free Debate Timer Display -->
+                <div id="freeDebateTimerDisplay" class="hidden">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <h3 id="affirmativeTimerHeader" class="text-xl font-semibold mb-2 text-affirmative">正方</h3>
+                            <div id="affirmativeTimer" class="text-5xl font-bold mb-2">00:00</div>
+                            <div id="affirmativeProgressBar" class="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div id="affirmativeProgress" class="h-full bg-affirmative transition-all duration-1000" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 id="negativeTimerHeader" class="text-xl font-semibold mb-2 text-negative">反方</h3>
+                            <div id="negativeTimer" class="text-5xl font-bold mb-2">00:00</div>
+                            <div id="negativeProgressBar" class="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div id="negativeProgress" class="h-full bg-negative transition-all duration-1000" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                     <div id="currentFreeSpeaker" class="text-3xl font-bold mb-2"></div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button id="startPauseTimer" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors font-semibold">
+                        開始
+                    </button>
+                    <button id="resetTimer" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-opacity-90 transition-colors font-semibold">
+                        重設
+                    </button>
+                    <!-- The functionality of nextRound button will change in free debate -->
+                    <button id="nextRound" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors font-semibold">
+                        下一環節
+                    </button>
+                    <button id="previousRound" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-opacity-90 transition-colors font-semibold">
+                        上一環節
+                    </button>
+                    <button id="backToSetup" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-opacity-90 transition-colors font-semibold">
+                        返回設置
+                    </button>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-2">辯論流程</h3>
+                <div id="scheduleOverview" class="space-y-2">
+                    <!-- 這裡將顯示完整賽程 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 偵測深色模式
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // 初始化賽程數據
+        let rounds = [
+            { name: "正方一辯立論", team: "正方", minutes: 3, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 },
+            { name: "反方一辯立論", team: "反方", minutes: 3, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 },
+            { name: "正方二辯質詢", team: "正方", minutes: 2, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 },
+            { name: "反方二辯質詢", team: "反方", minutes: 2, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 },
+            { name: "正方三辯小結", team: "正方", minutes: 2, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 },
+            { name: "反方三辯小結", team: "反方", minutes: 2, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 },
+            { name: "自由辯論", team: "自由辯論", minutes: 0, seconds: 0, affFreeMinutes: 4, affFreeSeconds: 0, negFreeMinutes: 4, negFreeSeconds: 0 }, // Example Free Debate Round
+            { name: "反方四辯總結", team: "反方", minutes: 3, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 },
+            { name: "正方四辯總結", team: "正方", minutes: 3, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 }
+        ];
+
+        // 計時相關變量
+        let currentRoundIndex = 0;
+        let timerInterval = null;
+        let remainingSeconds = 0; // Used for standard rounds
+        let totalSeconds = 0; // Used for standard rounds
+        let isTimerRunning = false;
+        let alarmSound = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");
+
+        // 新增自由辯論計時相關變量
+        let affirmativeFreeSecondsTotal = 0; // Total free debate time for affirmative
+        let negativeFreeSecondsTotal = 0; // Total free debate time for negative
+        let remainingAffirmativeSeconds = 0;
+        let remainingNegativeSeconds = 0;
+        let activeFreeTimer = 'affirmative'; // 'affirmative' or 'negative'
+
+        // 頁面加載時
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRoundsDisplay();
+            
+            // 添加新環節按鈕事件
+            document.getElementById('addRound').addEventListener('click', function() {
+                // Add new round with default standard values
+                rounds.push({ name: "", team: "正方", minutes: 2, seconds: 0, affFreeMinutes: 0, affFreeSeconds: 0, negFreeMinutes: 0, negFreeSeconds: 0 });
+                updateRoundsDisplay();
+            });
+            
+            // 開始辯論按鈕事件
+            document.getElementById('startDebate').addEventListener('click', function() {
+                const topic = document.getElementById('debateTopic').value.trim();
+                if (!topic) {
+                    alert('請輸入辯論題目！');
+                    return;
+                }
+                
+                if (rounds.length === 0) {
+                    alert('請添加至少一個辯論環節！');
+                    return;
+                }
+                
+                // Basic validation for round names
+                for (let i = 0; i < rounds.length; i++) {
+                    if (!rounds[i].name.trim()) {
+                        alert(`第 ${i + 1} 個環節缺少名稱，請填寫完整！`);
+                        return;
+                    }
+                     // Validation for free debate times if round type is free debate
+                     if (rounds[i].team === '自由辯論') {
+                          const affMinutes = rounds[i].affFreeMinutes;
+                          const affSeconds = rounds[i].affFreeSeconds;
+                          const negMinutes = rounds[i].negFreeMinutes;
+                          const negSeconds = rounds[i].negFreeSeconds;
+                           if ((affMinutes * 60 + affSeconds <= 0) || (negMinutes * 60 + negSeconds <= 0)) {
+                                alert(`第 ${i + 1} 個自由辯論環節需要設置有效的正反方時間！`);
+                                return;
+                           }
+                     }
+                }
+                
+                // 切換到計時頁面
+                document.getElementById('setupPage').classList.add('hidden');
+                document.getElementById('timerPage').classList.remove('hidden');
+                
+                // 顯示辯論題目
+                document.getElementById('currentTopic').textContent = topic;
+
+                currentRoundIndex = 0; // Start from the first round
+                startNextRound(); // Start the first round
+            });
+            
+            // 計時器控制按鈕事件
+            document.getElementById('startPauseTimer').addEventListener('click', toggleTimer);
+            document.getElementById('resetTimer').addEventListener('click', resetTimer);
+            
+            // nextRound button listener - now simply moves to the next round
+            document.getElementById('nextRound').addEventListener('click', function() {
+                stopTimer();
+                if (currentRoundIndex < rounds.length - 1) {
+                    currentRoundIndex++;
+                    startNextRound();
+                } else {
+                    alert('辯論已結束！');
+                    // Optionally return to setup or show a 'Debate Finished' message
+                     document.getElementById('timerPage').classList.add('hidden');
+                     document.getElementById('setupPage').classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('backToSetup').addEventListener('click', function() {
+                stopTimer();
+                document.getElementById('timerPage').classList.add('hidden');
+                document.getElementById('setupPage').classList.remove('hidden');
+            });
+
+            // Add spacebar event listener for free debate mode within a round
+            document.addEventListener('keydown', function(event) {
+                if (event.code === 'Space' && !event.repeat && isTimerRunning) {
+                     const currentRound = rounds[currentRoundIndex];
+                     if (currentRound && currentRound.team === '自由辯論') {
+                         event.preventDefault(); // Prevent scrolling
+                         switchFreeTimer();
+                     }
+                }
+            });
+
+            // 上一環節按鈕事件
+            document.getElementById('previousRound').addEventListener('click', function() {
+                stopTimer(); // Stop the current timer
+                if (currentRoundIndex > 0) {
+                    currentRoundIndex--; // Go to the previous round index
+                    startNextRound(); // Start the previous round
+                } else {
+                    alert('已是第一個環節！'); // Alert if already at the first round
+                }
+            });
+        });
+
+        // 更新賽程顯示
+        function updateRoundsDisplay() {
+            const roundsContainer = document.getElementById('rounds');
+            roundsContainer.innerHTML = '';
+            
+            rounds.forEach((round, index) => {
+                const roundElement = document.createElement('div');
+                roundElement.className = 'p-4 border rounded-md dark:border-gray-700 relative';
+
+                // Base HTML structure for standard round
+                let roundHtml = `
+                    <div class="absolute top-2 right-2">
+                        <button class="delete-round text-red-500 hover:text-red-700" data-index="${index}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium mb-1">環節名稱</label>
+                            <input type="text" class="round-name w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
+                                value="${round.name}" placeholder="例如：正方一辯立論" data-index="${index}">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1">方向</label>
+                            <select class="round-team w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" data-index="${index}">
+                                <option value="正方" ${round.team === '正方' ? 'selected' : ''}>正方</option>
+                                <option value="反方" ${round.team === '反方' ? 'selected' : ''}>反方</option>
+                                <option value="自由辯論" ${round.team === '自由辯論' ? 'selected' : ''}>自由辯論</option>
+                            </select>
+                        </div>
+                `;
+
+                // Conditional time inputs based on round type
+                if (round.team !== '自由辯論') {
+                    roundHtml += `
+                         <div>
+                            <label class="block text-sm font-medium mb-1">時間</label>
+                            <div class="flex">
+                                <input type="number" class="round-minutes w-full px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
+                                    value="${round.minutes}" min="0" max="59" data-index="${index}">
+                                <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-b dark:border-gray-700">分</span>
+                                <input type="number" class="round-seconds w-full px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
+                                    value="${round.seconds}" min="0" max="59" data-index="${index}">
+                                <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-r border-b rounded-r-md dark:border-gray-700">秒</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                     roundHtml += `
+                          <div class="md:col-span-3 grid md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">正方時間</label>
+                                    <div class="flex">
+                                        <input type="number" class="round-aff-free-minutes w-full px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
+                                            value="${round.affFreeMinutes}" min="0" max="59" data-index="${index}">
+                                        <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-b dark:border-gray-700">分</span>
+                                        <input type="number" class="round-aff-free-seconds w-full px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
+                                            value="${round.affFreeSeconds}" min="0" max="59" data-index="${index}">
+                                        <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-r border-b rounded-r-md dark:border-gray-700">秒</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">反方時間</label>
+                                    <div class="flex">
+                                        <input type="number" class="round-neg-free-minutes w-full px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
+                                            value="${round.negFreeMinutes}" min="0" max="59" data-index="${index}">
+                                        <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-b dark:border-gray-700">分</span>
+                                        <input type="number" class="round-neg-free-seconds w-full px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
+                                            value="${round.negFreeSeconds}" min="0" max="59" data-index="${index}">
+                                        <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-r border-b rounded-r-md dark:border-gray-700">秒</span>
+                                    </div>
+                                </div>
+                          </div>
+                     `;
+                }
+
+                roundHtml += `</div>`; // Close the grid div
+
+                roundElement.innerHTML = roundHtml;
+                
+                roundsContainer.appendChild(roundElement);
+            });
+            
+            // Add event listeners for dynamically created elements
+            document.querySelectorAll('.round-name').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    rounds[index].name = this.value;
+                });
+            });
+            
+            document.querySelectorAll('.round-team').forEach(select => {
+                select.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    rounds[index].team = this.value;
+                    // Re-render rounds display to show/hide appropriate time inputs
+                    updateRoundsDisplay();
+                });
+            });
+            
+            document.querySelectorAll('.round-minutes').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    rounds[index].minutes = parseInt(this.value) || 0;
+                });
+            });
+            
+            document.querySelectorAll('.round-seconds').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    rounds[index].seconds = parseInt(this.value) || 0;
+                });
+            });
+
+             // Add listeners for new free debate time inputs
+            document.querySelectorAll('.round-aff-free-minutes').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    rounds[index].affFreeMinutes = parseInt(this.value) || 0;
+                });
+            });
+            document.querySelectorAll('.round-aff-free-seconds').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    rounds[index].affFreeSeconds = parseInt(this.value) || 0;
+                });
+            });
+             document.querySelectorAll('.round-neg-free-minutes').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    rounds[index].negFreeMinutes = parseInt(this.value) || 0;
+                });
+            });
+            document.querySelectorAll('.round-neg-free-seconds').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    rounds[index].negFreeSeconds = parseInt(this.value) || 0;
+                });
+            });
+
+            document.querySelectorAll('.delete-round').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    if (rounds.length > 1) {
+                        rounds.splice(index, 1);
+                        updateRoundsDisplay();
+                    } else {
+                        alert('至少需要保留一個環節！');
+                    }
+                });
+            });
+        }
+
+        // Update schedule overview display (remains largely the same)
+        function updateScheduleOverview() {
+            const scheduleOverview = document.getElementById('scheduleOverview');
+            scheduleOverview.innerHTML = '';
+            
+            rounds.forEach((round, index) => {
+                const item = document.createElement('div');
+                item.className = `p-2 ${index === currentRoundIndex ? 'bg-primary bg-opacity-20 font-bold rounded' : ''}`;
+                
+                let timeDisplay = '';
+                let teamColor = '';
+
+                if (round.team === '自由辯論') {
+                    // Display total free debate time for overview
+                    const affMinutes = round.affFreeMinutes.toString().padStart(2, '0');
+                    const affSeconds = round.affFreeSeconds.toString().padStart(2, '0');
+                    const negMinutes = round.negFreeMinutes.toString().padStart(2, '0');
+                    const negSeconds = round.negFreeSeconds.toString().padStart(2, '0');
+                     timeDisplay = `正 ${affMinutes}:${affSeconds} / 反 ${negMinutes}:${negSeconds}`;
+                    teamColor = 'primary'; // Neutral color for overview
+                } else {
+                    // Standard round time display
+                    const minutes = round.minutes.toString().padStart(2, '0');
+                    const seconds = round.seconds.toString().padStart(2, '0');
+                    timeDisplay = `${minutes}:${seconds}`;
+                    teamColor = round.team === '正方' ? 'affirmative' : 'negative';
+                }
+                
+                item.innerHTML = `
+                    <span class="inline-block w-6 h-6 rounded-full bg-${teamColor} mr-2"></span>
+                    <span>${round.name}</span>
+                    <span class="float-right">${timeDisplay}</span>
+                `;
+                
+                scheduleOverview.appendChild(item);
+            });
+        }
+
+        // Start the current round based on its type
+        function startNextRound() {
+             if (currentRoundIndex >= rounds.length) {
+                alert('辯論已結束！');
+                 // Optionally return to setup or show a 'Debate Finished' message
+                document.getElementById('timerPage').classList.add('hidden');
+                document.getElementById('setupPage').classList.remove('hidden');
+                return;
+            }
+
+            const currentRound = rounds[currentRoundIndex];
+            document.getElementById('currentRoundInfo').textContent = `第 ${currentRoundIndex + 1} 環節：${currentRound.name}`;
+             document.getElementById('currentSpeaker').textContent = ''; // Clear standard speaker display initially
+             document.getElementById('currentFreeSpeaker').textContent = ''; // Clear free speaker display initially
+
+            // Update schedule overview to highlight current round
+            updateScheduleOverview();
+
+            if (currentRound.team === '自由辯論') {
+                // Switch to Free Debate Display
+                document.getElementById('standardTimerDisplay').classList.add('hidden');
+                document.getElementById('freeDebateTimerDisplay').classList.remove('hidden');
+                 document.getElementById('scheduleOverview').parentElement.classList.remove('hidden'); // Schedule overview remains visible
+
+                // Initialize Free Debate Timers
+                affirmativeFreeSecondsTotal = currentRound.affFreeMinutes * 60 + currentRound.affFreeSeconds;
+                negativeFreeSecondsTotal = currentRound.negFreeMinutes * 60 + currentRound.negFreeSeconds;
+                remainingAffirmativeSeconds = affirmativeFreeSecondsTotal;
+                remainingNegativeSeconds = negativeFreeSecondsTotal;
+                activeFreeTimer = 'affirmative'; // Default to affirmative starts free debate
+
+                updateFreeTimerDisplay();
+                updateFreeSpeakerDisplay(); // Show initial speaker
+
+            } else {
+                // Switch to Standard Timer Display
+                document.getElementById('standardTimerDisplay').classList.remove('hidden');
+                document.getElementById('freeDebateTimerDisplay').classList.add('hidden');
+                 document.getElementById('scheduleOverview').parentElement.classList.remove('hidden'); // Schedule overview remains visible
+
+                // Initialize Standard Timer
+                totalSeconds = currentRound.minutes * 60 + currentRound.seconds;
+                remainingSeconds = totalSeconds;
+
+                 // Set initial speaker for standard round
+                 const teamName = currentRound.team === '正方' ? 
+                    document.getElementById('affirmativeTeam').value : 
+                    document.getElementById('negativeTeam').value;
+                 const teamColor = currentRound.team === '正方' ? 'affirmative' : 'negative';
+                 const speaker = document.getElementById('currentSpeaker');
+                 speaker.textContent = teamName;
+                 speaker.className = `text-3xl font-bold mb-2 text-${teamColor}`;
+
+                updateStandardTimerDisplay();
+            }
+
+             // Reset timer state to paused
+            isTimerRunning = false;
+            document.getElementById('startPauseTimer').textContent = '開始';
+        }
+
+        // Update timer display (Handles both modes internally)
+        function updateTimerDisplay() {
+            const currentRound = rounds[currentRoundIndex];
+            if (!currentRound) return; // Should not happen if called correctly
+
+            if (currentRound.team === '自由辯論') {
+                updateFreeTimerDisplay();
+            } else {
+                updateStandardTimerDisplay();
+            }
+        }
+
+
+        // Update standard timer display
+        function updateStandardTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update progress bar
+             const progress = document.getElementById('progress');
+            const progressPercent = (remainingSeconds / totalSeconds) * 100;
+            progress.style.width = `${progressPercent}%`;
+             const teamColor = rounds[currentRoundIndex].team === '正方' ? 'affirmative' : 'negative';
+             progress.className = `h-full bg-${teamColor} transition-all duration-1000`; // Update color based on team
+
+            // Time warning color change
+            const timerElement = document.getElementById('timer');
+            timerElement.className = 'text-6xl font-bold mb-2'; // Reset color
+            if (remainingSeconds <= 30 && remainingSeconds > 10) {
+                timerElement.classList.add('text-yellow-500');
+            } else if (remainingSeconds <= 10) {
+                timerElement.classList.add('text-red-500');
+            }
+        }
+
+        // Update free debate timer display
+        function updateFreeTimerDisplay() {
+            const affMinutes = Math.floor(remainingAffirmativeSeconds / 60);
+            const affSeconds = remainingAffirmativeSeconds % 60;
+            document.getElementById('affirmativeTimer').textContent = 
+                `${affMinutes.toString().padStart(2, '0')}:${affSeconds.toString().padStart(2, '0')}`;
+
+            const negMinutes = Math.floor(remainingNegativeSeconds / 60);
+            const negSeconds = remainingNegativeSeconds % 60;
+            document.getElementById('negativeTimer').textContent = 
+                `${negMinutes.toString().padStart(2, '0')}:${negSeconds.toString().padStart(2, '0')}`;
+            
+            // Update progress bar (Free Debate)
+            const affProgressPercent = (remainingAffirmativeSeconds / affirmativeFreeSecondsTotal) * 100;
+            document.getElementById('affirmativeProgress').style.width = `${affProgressPercent}%`;
+             document.getElementById('affirmativeProgress').className = `h-full bg-affirmative transition-all duration-1000`;
+
+            const negProgressPercent = (remainingNegativeSeconds / negativeFreeSecondsTotal) * 100;
+            document.getElementById('negativeProgress').style.width = `${negProgressPercent}%`;
+             document.getElementById('negativeProgress').className = `h-full bg-negative transition-all duration-1000`;
+
+
+             // Time warning color change (Free Debate)
+             const affTimerElement = document.getElementById('affirmativeTimer');
+             const negTimerElement = document.getElementById('negativeTimer');
+
+             // Reset colors first
+             affTimerElement.className = 'text-5xl font-bold mb-2';
+             negTimerElement.className = 'text-5xl font-bold mb-2';
+
+             if (activeFreeTimer === 'affirmative') {
+                 if (remainingAffirmativeSeconds <= 30 && remainingAffirmativeSeconds > 10) {
+                     affTimerElement.classList.add('text-yellow-500');
+                 } else if (remainingAffirmativeSeconds <= 10) {
+                     affTimerElement.classList.add('text-red-500');
+                 }
+                  // Highlight active timer display (optional - could add a class to a parent div)
+                   document.getElementById('affirmativeTimerHeader').classList.add('underline');
+                   document.getElementById('negativeTimerHeader').classList.remove('underline');
+             } else { // activeFreeTimer === 'negative'
+                  if (remainingNegativeSeconds <= 30 && remainingNegativeSeconds > 10) {
+                     negTimerElement.classList.add('text-yellow-500');
+                 } else if (remainingNegativeSeconds <= 10) {
+                     negTimerElement.classList.add('text-red-500');
+                 }
+                   // Highlight active timer display (optional)
+                   document.getElementById('negativeTimerHeader').classList.add('underline');
+                   document.getElementById('affirmativeTimerHeader').classList.remove('underline');
+             }
+        }
+
+
+        // Update free debate speaker display
+        function updateFreeSpeakerDisplay() {
+            const speakerElement = document.getElementById('currentFreeSpeaker');
+            if (activeFreeTimer === 'affirmative') {
+                 speakerElement.textContent = document.getElementById('affirmativeTeam').value;
+                 speakerElement.className = 'text-3xl font-bold mb-2 text-affirmative';
+            } else { // activeFreeTimer === 'negative'
+                 speakerElement.textContent = document.getElementById('negativeTeam').value;
+                 speakerElement.className = 'text-3xl font-bold mb-2 text-negative';
+            }
+             // Hide standard speaker display
+             document.getElementById('currentSpeaker').textContent = '';
+        }
+
+        // Start/Pause timer (Handles both modes internally)
+        function toggleTimer() {
+            if (isTimerRunning) {
+                stopTimer();
+                document.getElementById('startPauseTimer').textContent = '開始';
+            } else {
+                 const currentRound = rounds[currentRoundIndex];
+                 // Prevent starting if times are zero, especially for free debate
+                 if (currentRound.team === '自由辯論' && remainingAffirmativeSeconds <= 0 && remainingNegativeSeconds <= 0) {
+                     alert('自由辯論時間已用盡！');
+                     return;
+                 }
+                  if (currentRound.team !== '自由辯論' && remainingSeconds <= 0) {
+                      alert('該環節時間已結束！');
+                      return;
+                  }
+
+                startTimer();
+                document.getElementById('startPauseTimer').textContent = '暫停';
+            }
+            isTimerRunning = !isTimerRunning;
+        }
+
+        // Start timer interval
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(function() {
+                const currentRound = rounds[currentRoundIndex];
+                
+                if (currentRound.team === '自由辯論') {
+                    if (activeFreeTimer === 'affirmative') {
+                        if (remainingAffirmativeSeconds > 0) {
+                            remainingAffirmativeSeconds--;
+                            updateFreeTimerDisplay();
+                            // 時間警告音效
+                            if (remainingAffirmativeSeconds === 30 || remainingAffirmativeSeconds === 10 || remainingAffirmativeSeconds === 0) {
+                                alarmSound.play();
+                            }
+                             if (remainingAffirmativeSeconds === 0 && remainingNegativeSeconds === 0) {
+                                // Both timers finished
+                                stopTimer();
+                                alarmSound.play(); // Final alert
+                                document.getElementById('startPauseTimer').textContent = '開始';
+                                isTimerRunning = false;
+                                document.getElementById('currentFreeSpeaker').textContent = '辯論結束'; // Indicate end
+                             } else if (remainingAffirmativeSeconds === 0) {
+                                // Affirmative time is out, but negative still has time
+                                 // Optionally switch to negative or just let it run out
+                                  // switchFreeTimer(); // Auto-switch if affirmative runs out
+                                 // For now, just stop this timer and user has to manually switch
+                                  stopTimer();
+                                  document.getElementById('startPauseTimer').textContent = '開始';
+                                  isTimerRunning = false;
+                                  document.getElementById('currentFreeSpeaker').textContent = '正方時間用盡'; // Indicate affirmative time is out
+                             }
+                        }
+                    } else { // activeFreeTimer === 'negative'
+                         if (remainingNegativeSeconds > 0) {
+                            remainingNegativeSeconds--;
+                            updateFreeTimerDisplay();
+                             // 時間警告音效
+                            if (remainingNegativeSeconds === 30 || remainingNegativeSeconds === 10 || remainingNegativeSeconds === 0) {
+                                alarmSound.play();
+                            }
+                            if (remainingNegativeSeconds === 0 && remainingAffirmativeSeconds === 0) {
+                                // Both timers finished
+                                stopTimer();
+                                alarmSound.play(); // Final alert
+                                document.getElementById('startPauseTimer').textContent = '開始';
+                                isTimerRunning = false;
+                                 document.getElementById('currentFreeSpeaker').textContent = '辯論結束'; // Indicate end
+                            } else if (remainingNegativeSeconds === 0) {
+                                // Negative time is out, but affirmative still has time
+                                 // Optionally switch to affirmative or just let it run out
+                                  // switchFreeTimer(); // Auto-switch if negative runs out
+                                   // For now, just stop this timer and user has to manually switch
+                                  stopTimer();
+                                   document.getElementById('startPauseTimer').textContent = '開始';
+                                  isTimerRunning = false;
+                                   document.getElementById('currentFreeSpeaker').textContent = '反方時間用盡'; // Indicate negative time is out
+                            }
+                         }
+                    }
+                } else { // standard mode
+                    if (remainingSeconds > 0) {
+                        remainingSeconds--;
+                        updateStandardTimerDisplay();
+                        
+                        // 時間警告音效
+                        if (remainingSeconds === 30 || remainingSeconds === 10 || remainingSeconds === 0) {
+                            alarmSound.play();
+                        }
+                    } else {
+                        stopTimer();
+                        alarmSound.play();
+                        document.getElementById('startPauseTimer').textContent = '開始';
+                        isTimerRunning = false;
+                         // Optionally advance to the next round automatically
+                         // document.getElementById('nextRound').click();
+                    }
+                }
+            }, 1000);
+        }
+
+        // Stop timer interval
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // Reset timer (Resets based on current round type)
+        function resetTimer() {
+            stopTimer();
+            isTimerRunning = false;
+            document.getElementById('startPauseTimer').textContent = '開始';
+            const currentRound = rounds[currentRoundIndex];
+
+            if (currentRound.team === '自由辯論') {
+                 affirmativeFreeSecondsTotal = currentRound.affFreeMinutes * 60 + currentRound.affFreeSeconds;
+                 negativeFreeSecondsTotal = currentRound.negFreeMinutes * 60 + currentRound.negFreeSeconds;
+                 remainingAffirmativeSeconds = affirmativeFreeSecondsTotal;
+                 remainingNegativeSeconds = negativeFreeSecondsTotal;
+                 activeFreeTimer = 'affirmative'; // Reset active timer to affirmative
+
+                 updateFreeTimerDisplay();
+                 updateFreeSpeakerDisplay(); // Update speaker display
+                 // Reset any end-of-debate messages
+                 document.getElementById('currentFreeSpeaker').textContent = document.getElementById('affirmativeTeam').value; // Show initial speaker
+
+            } else { // standard mode
+                totalSeconds = currentRound.minutes * 60 + currentRound.seconds;
+                remainingSeconds = totalSeconds;
+                updateStandardTimerDisplay();
+                 // Reset progress bar width in standard mode
+                 const progress = document.getElementById('progress');
+                 progress.style.width = '100%';
+                 const teamColor = currentRound.team === '正方' ? 'affirmative' : 'negative';
+                 progress.className = `h-full bg-${teamColor} transition-all duration-1000`;
+                  // Restore standard speaker display
+                  const teamName = currentRound.team === '正方' ? 
+                    document.getElementById('affirmativeTeam').value : 
+                    document.getElementById('negativeTeam').value;
+                  const teamColorSpeaker = currentRound.team === '正方' ? 'affirmative' : 'negative';
+                  const speaker = document.getElementById('currentSpeaker');
+                  speaker.textContent = teamName;
+                  speaker.className = `text-3xl font-bold mb-2 text-${teamColorSpeaker}`;
+            }
+             // Ensure correct timer display is shown after reset
+             if (currentRound.team === '自由辯論') {
+                  document.getElementById('standardTimerDisplay').classList.add('hidden');
+                  document.getElementById('freeDebateTimerDisplay').classList.remove('hidden');
+             } else {
+                  document.getElementById('standardTimerDisplay').classList.remove('hidden');
+                  document.getElementById('freeDebateTimerDisplay').classList.add('hidden');
+             }
+             updateScheduleOverview(); // Update schedule overview highlight
+        }
+
+        // Switch free debate timer
+        function switchFreeTimer() {
+            const currentRound = rounds[currentRoundIndex];
+             if (!currentRound || currentRound.team !== '自由辯論') return; // Only switch in free debate round
+
+             // Stop current timer before switching
+             // stopTimer(); // Decide if timer should pause or just switch counting
+
+            if (activeFreeTimer === 'affirmative') {
+                if (remainingNegativeSeconds > 0) { // Only switch if the other team has time left
+                   activeFreeTimer = 'negative';
+                } else {
+                   // alert('反方時間已用盡！無法切換。');
+                   return; // Do not switch if the other side has no time
+                }
+            } else { // activeFreeTimer === 'negative'
+                if (remainingAffirmativeSeconds > 0) { // Only switch if the other team has time left
+                   activeFreeTimer = 'affirmative';
+                } else {
+                    // alert('正方時間已用盡！無法切換。');
+                    return; // Do not switch if the other side has no time
+                }
+            }
+            updateFreeSpeakerDisplay();
+             // Optionally restart timer immediately after switching if it was running
+             // if (!timerInterval && isTimerRunning) {
+             //     startTimer();
+             // }
+
+        }
+    </script>
+</body>
+</html>
