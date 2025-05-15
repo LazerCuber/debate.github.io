@@ -220,6 +220,9 @@
                 document.getElementById('setupPage').classList.add('hidden');
                 document.getElementById('timerPage').classList.remove('hidden');
                 
+                // Scroll to top
+                window.scrollTo(0, 0);
+                
                 // 顯示辯論題目
                 document.getElementById('currentTopic').textContent = topic;
 
@@ -306,48 +309,55 @@
                                 <option value="正方" ${round.team === '正方' ? 'selected' : ''}>正方</option>
                                 <option value="反方" ${round.team === '反方' ? 'selected' : ''}>反方</option>
                                 <option value="自由辯論" ${round.team === '自由辯論' ? 'selected' : ''}>自由辯論</option>
+                                <option value="無時間環節" ${round.team === '無時間環節' ? 'selected' : ''}>無時間環節</option>
                             </select>
                         </div>
                 `;
 
                 // Conditional time inputs based on round type
-                if (round.team !== '自由辯論') {
+                if (round.team !== '自由辯論' && round.team !== '無時間環節') {
                     roundHtml += `
                          <div>
                             <label class="block text-sm font-medium mb-1">時間</label>
-                            <div class="flex">
-                                <input type="number" class="round-minutes w-full px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
-                                    value="${round.minutes}" min="0" max="59" data-index="${index}">
-                                <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-b dark:border-gray-700">分</span>
-                                <input type="number" class="round-seconds w-full px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
-                                    value="${round.seconds}" min="0" max="59" data-index="${index}">
-                                <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-r border-b rounded-r-md dark:border-gray-700">秒</span>
+                            <div class="p-0.5 bg-gradient-to-r from-gray-700 to-gray-700 rounded-md">
+                                <div class="flex bg-white dark:bg-gray-800 rounded-md overflow-hidden">
+                                    <input type="number" class="round-minutes w-full px-3 py-1 focus:outline-none text-base dark:text-gray-200 dark:bg-gray-800"
+                                        value="${round.minutes}" min="0" max="59" data-index="${index}">
+                                    <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-base flex items-center justify-center text-gray-700 dark:text-gray-300">分</span>
+                                    <input type="number" class="round-seconds w-full px-3 py-1 focus:outline-none text-base dark:text-gray-200 dark:bg-gray-800"
+                                        value="${round.seconds}" min="0" max="59" data-index="${index}">
+                                    <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-base flex items-center justify-center text-gray-700 dark:text-gray-300 rounded-r-md">秒</span>
+                                </div>
                             </div>
                         </div>
                     `;
-                } else {
+                } else if (round.team === '自由辯論') {
                      roundHtml += `
                           <div class="md:col-span-3 grid md:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-sm font-medium mb-1">正方時間</label>
-                                    <div class="flex">
-                                        <input type="number" class="round-aff-free-minutes w-full px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
-                                            value="${round.affFreeMinutes}" min="0" max="59" data-index="${index}">
-                                        <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-b dark:border-gray-700">分</span>
-                                        <input type="number" class="round-aff-free-seconds w-full px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
-                                            value="${round.affFreeSeconds}" min="0" max="59" data-index="${index}">
-                                        <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-r border-b rounded-r-md dark:border-gray-700">秒</span>
-                                    </div>
+                                     <div class="p-0.5 bg-gradient-to-r from-gray-700 to-gray-700 rounded-md">
+                                        <div class="flex bg-white dark:bg-gray-800 rounded-md overflow-hidden">
+                                            <input type="number" class="round-aff-free-minutes w-full px-3 py-1 focus:outline-none text-base dark:text-gray-200 dark:bg-gray-800"
+                                                value="${round.affFreeMinutes}" min="0" max="59" data-index="${index}">
+                                            <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-base flex items-center justify-center text-gray-700 dark:text-gray-300">分</span>
+                                            <input type="number" class="round-aff-free-seconds w-full px-3 py-1 focus:outline-none text-base dark:text-gray-200 dark:bg-gray-800"
+                                                value="${round.affFreeSeconds}" min="0" max="59" data-index="${index}">
+                                            <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-base flex items-center justify-center text-gray-700 dark:text-gray-300 rounded-r-md">秒</span>
+                                        </div>
+                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium mb-1">反方時間</label>
-                                    <div class="flex">
-                                        <input type="number" class="round-neg-free-minutes w-full px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
-                                            value="${round.negFreeMinutes}" min="0" max="59" data-index="${index}">
-                                        <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-b dark:border-gray-700">分</span>
-                                        <input type="number" class="round-neg-free-seconds w-full px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 text-base" 
-                                            value="${round.negFreeSeconds}" min="0" max="59" data-index="${index}">
-                                        <span class="px-2 py-2 bg-gray-100 dark:bg-gray-600 border-t border-r border-b rounded-r-md dark:border-gray-700">秒</span>
+                                    <div class="p-0.5 bg-gradient-to-r from-gray-700 to-gray-700 rounded-md">
+                                        <div class="flex bg-white dark:bg-gray-800 rounded-md overflow-hidden">
+                                            <input type="number" class="round-neg-free-minutes w-full px-3 py-1 focus:outline-none text-base dark:text-gray-200 dark:bg-gray-800"
+                                                value="${round.negFreeMinutes}" min="0" max="59" data-index="${index}">
+                                            <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-base flex items-center justify-center text-gray-700 dark:text-gray-300">分</span>
+                                            <input type="number" class="round-neg-free-seconds w-full px-3 py-1 focus:outline-none text-base dark:text-gray-200 dark:bg-gray-800"
+                                                value="${round.negFreeSeconds}" min="0" max="59" data-index="${index}">
+                                            <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-base flex items-center justify-center text-gray-700 dark:text-gray-300 rounded-r-md">秒</span>
+                                        </div>
                                     </div>
                                 </div>
                           </div>
@@ -438,6 +448,7 @@
             
             rounds.forEach((round, index) => {
                 const item = document.createElement('div');
+                // Apply highlighting and padding to the outer item div
                 item.className = `p-2 ${index === currentRoundIndex ? 'bg-primary bg-opacity-20 font-bold rounded' : ''}`;
                 
                 let timeDisplay = '';
@@ -451,7 +462,11 @@
                     const negSeconds = round.negFreeSeconds.toString().padStart(2, '0');
                      timeDisplay = `正 ${affMinutes}:${affSeconds} / 反 ${negMinutes}:${negSeconds}`;
                     teamColor = 'primary'; // Neutral color for overview
-                } else {
+                } else if (round.team === '無時間環節') {
+                     timeDisplay = '無時間';
+                     teamColor = 'gray-500'; // Neutral color for no-time rounds
+                }
+                else {
                     // Standard round time display
                     const minutes = round.minutes.toString().padStart(2, '0');
                     const seconds = round.seconds.toString().padStart(2, '0');
@@ -459,10 +474,15 @@
                     teamColor = round.team === '正方' ? 'affirmative' : 'negative';
                 }
                 
+                // Use Flexbox for internal layout
                 item.innerHTML = `
-                    <span class="inline-block w-6 h-6 rounded-full bg-${teamColor} mr-2"></span>
-                    <span>${round.name}</span>
-                    <span class="float-right">${timeDisplay}</span>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="inline-block w-4 h-4 rounded-full bg-${teamColor} mr-2"></span> <!-- Reduced size slightly for better fit -->
+                            <span>${round.name}</span>
+                        </div>
+                        <span>${timeDisplay}</span>
+                    </div>
                 `;
                 
                 scheduleOverview.appendChild(item);
@@ -483,6 +503,10 @@
             document.getElementById('currentRoundInfo').textContent = `第 ${currentRoundIndex + 1} 環節：${currentRound.name}`;
              document.getElementById('currentSpeaker').textContent = ''; // Clear standard speaker display initially
              document.getElementById('currentFreeSpeaker').textContent = ''; // Clear free speaker display initially
+             // Ensure timer display is reset
+             document.getElementById('timer').textContent = '00:00';
+             document.getElementById('affirmativeTimer').textContent = '00:00';
+             document.getElementById('negativeTimer').textContent = '00:00';
 
             // Update schedule overview to highlight current round
             updateScheduleOverview();
@@ -492,6 +516,9 @@
                 document.getElementById('standardTimerDisplay').classList.add('hidden');
                 document.getElementById('freeDebateTimerDisplay').classList.remove('hidden');
                  document.getElementById('scheduleOverview').parentElement.classList.remove('hidden'); // Schedule overview remains visible
+                 // Ensure timer buttons are visible
+                 document.getElementById('startPauseTimer').classList.remove('hidden');
+                 document.getElementById('resetTimer').classList.remove('hidden');
 
                 // Initialize Free Debate Timers
                 affirmativeFreeSecondsTotal = currentRound.affFreeMinutes * 60 + currentRound.affFreeSeconds;
@@ -503,11 +530,28 @@
                 updateFreeTimerDisplay();
                 updateFreeSpeakerDisplay(); // Show initial speaker
 
+            } else if (currentRound.team === '無時間環節') {
+                 // Hide both timer displays
+                 document.getElementById('standardTimerDisplay').classList.add('hidden');
+                 document.getElementById('freeDebateTimerDisplay').classList.add('hidden');
+                  document.getElementById('scheduleOverview').parentElement.classList.remove('hidden'); // Schedule overview remains visible
+                 // Optionally hide timer buttons
+                 document.getElementById('startPauseTimer').classList.add('hidden');
+                 document.getElementById('resetTimer').classList.add('hidden');
+
+                 // Display round info without timer
+                  document.getElementById('currentSpeaker').textContent = currentRound.name;
+                   document.getElementById('currentSpeaker').className = 'text-3xl font-bold mb-2'; // Reset color
+
             } else {
                 // Switch to Standard Timer Display
                 document.getElementById('standardTimerDisplay').classList.remove('hidden');
                 document.getElementById('freeDebateTimerDisplay').classList.add('hidden');
                  document.getElementById('scheduleOverview').parentElement.classList.remove('hidden'); // Schedule overview remains visible
+                 // Ensure timer buttons are visible
+                 document.getElementById('startPauseTimer').classList.remove('hidden');
+                 document.getElementById('resetTimer').classList.remove('hidden');
+
 
                 // Initialize Standard Timer
                 totalSeconds = currentRound.minutes * 60 + currentRound.seconds;
@@ -527,7 +571,10 @@
 
              // Reset timer state to paused
             isTimerRunning = false;
-            document.getElementById('startPauseTimer').textContent = '開始';
+             // Update button text only if it's a timed round
+             if (currentRound.team !== '無時間環節') {
+                document.getElementById('startPauseTimer').textContent = '開始';
+             }
         }
 
         // Update timer display (Handles both modes internally)
@@ -635,11 +682,15 @@
 
         // Start/Pause timer (Handles both modes internally)
         function toggleTimer() {
+             const currentRound = rounds[currentRoundIndex];
+             if (currentRound.team === '無時間環節') {
+                 return; // Do nothing if it's a no-time round
+             }
+
             if (isTimerRunning) {
                 stopTimer();
                 document.getElementById('startPauseTimer').textContent = '開始';
             } else {
-                 const currentRound = rounds[currentRoundIndex];
                  // Prevent starting if times are zero, especially for free debate
                  if (currentRound.team === '自由辯論' && remainingAffirmativeSeconds <= 0 && remainingNegativeSeconds <= 0) {
                      alert('自由辯論時間已用盡！');
@@ -753,6 +804,22 @@
             document.getElementById('startPauseTimer').textContent = '開始';
             const currentRound = rounds[currentRoundIndex];
 
+             if (currentRound.team === '無時間環節') {
+                 // No timer to reset for no-time rounds
+                 // Ensure timer displays are hidden
+                 document.getElementById('standardTimerDisplay').classList.add('hidden');
+                 document.getElementById('freeDebateTimerDisplay').classList.add('hidden');
+                  // Ensure timer buttons are hidden
+                  document.getElementById('startPauseTimer').classList.add('hidden');
+                  document.getElementById('resetTimer').classList.add('hidden');
+                  // Update speaker display for no-time round
+                  document.getElementById('currentSpeaker').textContent = currentRound.name;
+                  document.getElementById('currentSpeaker').className = 'text-3xl font-bold mb-2'; // Reset color
+                  document.getElementById('currentFreeSpeaker').textContent = ''; // Clear free speaker display
+                 return; // Exit the function
+             }
+
+
             if (currentRound.team === '自由辯論') {
                  affirmativeFreeSecondsTotal = currentRound.affFreeMinutes * 60 + currentRound.affFreeSeconds;
                  negativeFreeSecondsTotal = currentRound.negFreeMinutes * 60 + currentRound.negFreeSeconds;
@@ -764,6 +831,13 @@
                  updateFreeSpeakerDisplay(); // Update speaker display
                  // Reset any end-of-debate messages
                  document.getElementById('currentFreeSpeaker').textContent = document.getElementById('affirmativeTeam').value; // Show initial speaker
+                 // Ensure correct timer display is shown after reset
+                  document.getElementById('standardTimerDisplay').classList.add('hidden');
+                  document.getElementById('freeDebateTimerDisplay').classList.remove('hidden');
+                 // Ensure timer buttons are visible
+                 document.getElementById('startPauseTimer').classList.remove('hidden');
+                 document.getElementById('resetTimer').classList.remove('hidden');
+
 
             } else { // standard mode
                 totalSeconds = currentRound.minutes * 60 + currentRound.seconds;
@@ -782,25 +856,23 @@
                   const speaker = document.getElementById('currentSpeaker');
                   speaker.textContent = teamName;
                   speaker.className = `text-3xl font-bold mb-2 text-${teamColorSpeaker}`;
-            }
-             // Ensure correct timer display is shown after reset
-             if (currentRound.team === '自由辯論') {
-                  document.getElementById('standardTimerDisplay').classList.add('hidden');
-                  document.getElementById('freeDebateTimerDisplay').classList.remove('hidden');
-             } else {
+                   // Ensure correct timer display is shown after reset
                   document.getElementById('standardTimerDisplay').classList.remove('hidden');
                   document.getElementById('freeDebateTimerDisplay').classList.add('hidden');
-             }
+                 // Ensure timer buttons are visible
+                 document.getElementById('startPauseTimer').classList.remove('hidden');
+                 document.getElementById('resetTimer').classList.remove('hidden');
+            }
              updateScheduleOverview(); // Update schedule overview highlight
         }
 
         // Switch free debate timer
         function switchFreeTimer() {
             const currentRound = rounds[currentRoundIndex];
-             if (!currentRound || currentRound.team !== '自由辯論') return; // Only switch in free debate round
+             if (!currentRound || currentRound.team !== '自由辯論') return; // Only switch in free debate
 
-             // Stop current timer before switching
-             // stopTimer(); // Decide if timer should pause or just switch counting
+            // Stop current timer before switching
+            // stopTimer(); // Decide if timer should pause or just switch counting
 
             if (activeFreeTimer === 'affirmative') {
                 if (remainingNegativeSeconds > 0) { // Only switch if the other team has time left
