@@ -278,14 +278,77 @@
             });
         });
 
-        // 更新賽程顯示
+        // Add this function to handle drag and drop for rounds
+        function setupDragAndDrop() {
+            const roundsContainer = document.getElementById('rounds');
+            let draggedItem = null;
+
+            // Add event listeners for drag and drop
+            roundsContainer.addEventListener('dragstart', function(e) {
+                if (e.target.closest('.round-item')) {
+                    draggedItem = e.target.closest('.round-item');
+                    e.dataTransfer.setData('text/plain', draggedItem.dataset.index);
+                    setTimeout(() => {
+                        draggedItem.style.opacity = '0.5';
+                    }, 0);
+                }
+            });
+
+            roundsContainer.addEventListener('dragend', function() {
+                if (draggedItem) {
+                    draggedItem.style.opacity = '1';
+                    draggedItem = null;
+                }
+            });
+
+            roundsContainer.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(roundsContainer, e.clientY);
+                if (afterElement) {
+                    roundsContainer.insertBefore(draggedItem, afterElement);
+                } else {
+                    roundsContainer.appendChild(draggedItem);
+                }
+            });
+
+            roundsContainer.addEventListener('drop', function(e) {
+                e.preventDefault();
+                if (draggedItem) {
+                    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                    const toIndex = Array.from(roundsContainer.children).indexOf(draggedItem);
+                    if (fromIndex !== toIndex) {
+                        const [movedRound] = rounds.splice(fromIndex, 1);
+                        rounds.splice(toIndex, 0, movedRound);
+                        updateRoundsDisplay();
+                    }
+                }
+            });
+
+            // Helper function to determine where to place the dragged item
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.round-item:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+        }
+
+        // Modify the updateRoundsDisplay function to add draggable attributes
         function updateRoundsDisplay() {
             const roundsContainer = document.getElementById('rounds');
             roundsContainer.innerHTML = '';
             
             rounds.forEach((round, index) => {
                 const roundElement = document.createElement('div');
-                roundElement.className = 'p-4 border rounded-md dark:border-gray-700 relative';
+                roundElement.className = 'p-4 border rounded-md dark:border-gray-700 relative round-item';
+                roundElement.draggable = true;
+                roundElement.dataset.index = index;
 
                 // Base HTML structure for standard round
                 let roundHtml = `
@@ -377,6 +440,15 @@
                 input.addEventListener('change', function() {
                     const index = parseInt(this.dataset.index);
                     rounds[index].name = this.value;
+
+                    // Auto-detect direction based on keywords
+                    if (this.value.includes('正方')) {
+                        rounds[index].team = '正方';
+                        document.querySelector(`.round-team[data-index="${index}"]`).value = '正方';
+                    } else if (this.value.includes('反方')) {
+                        rounds[index].team = '反方';
+                        document.querySelector(`.round-team[data-index="${index}"]`).value = '反方';
+                    }
                 });
             });
             
@@ -440,6 +512,9 @@
                     }
                 });
             });
+
+            // Initialize drag and drop
+            setupDragAndDrop();
         }
 
         // Update schedule overview display (remains largely the same)
