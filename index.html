@@ -264,6 +264,14 @@
                          switchFreeTimer();
                      }
                 }
+                // Add 'S' key listener for free debate switching
+                if (event.code === 'KeyS' && !event.repeat) {
+                     const currentRound = rounds[currentRoundIndex];
+                     if (currentRound && currentRound.team === '自由辯論') {
+                         event.preventDefault(); // Prevent scrolling
+                         switchFreeTimer();
+                     }
+                }
             });
 
             // 上一環節按鈕事件
@@ -808,13 +816,12 @@
                                 document.getElementById('currentFreeSpeaker').textContent = '辯論結束'; // Indicate end
                              } else if (remainingAffirmativeSeconds === 0) {
                                 // Affirmative time is out, but negative still has time
-                                 // Optionally switch to negative or just let it run out
-                                  // switchFreeTimer(); // Auto-switch if affirmative runs out
-                                 // For now, just stop this timer and user has to manually switch
-                                  stopTimer();
-                                  document.getElementById('startPauseTimer').textContent = '開始';
-                                  isTimerRunning = false;
-                                  document.getElementById('currentFreeSpeaker').textContent = '正方時間用盡'; // Indicate affirmative time is out
+                                 // Auto-switch to negative when affirmative time runs out
+                                 switchFreeTimer();
+                                 // Keep timer running if it was running
+                                 if (isTimerRunning) {
+                                     startTimer();
+                                 }
                              }
                         }
                     } else { // activeFreeTimer === 'negative'
@@ -834,13 +841,12 @@
                                  document.getElementById('currentFreeSpeaker').textContent = '辯論結束'; // Indicate end
                             } else if (remainingNegativeSeconds === 0) {
                                 // Negative time is out, but affirmative still has time
-                                 // Optionally switch to affirmative or just let it run out
-                                  // switchFreeTimer(); // Auto-switch if negative runs out
-                                   // For now, just stop this timer and user has to manually switch
-                                  stopTimer();
-                                   document.getElementById('startPauseTimer').textContent = '開始';
-                                  isTimerRunning = false;
-                                   document.getElementById('currentFreeSpeaker').textContent = '反方時間用盡'; // Indicate negative time is out
+                                 // Auto-switch to affirmative when negative time runs out
+                                 switchFreeTimer();
+                                 // Keep timer running if it was running
+                                 if (isTimerRunning) {
+                                     startTimer();
+                                 }
                             }
                          }
                     }
@@ -947,30 +953,24 @@
             const currentRound = rounds[currentRoundIndex];
              if (!currentRound || currentRound.team !== '自由辯論') return; // Only switch in free debate
 
-            // Stop current timer before switching
-            // stopTimer(); // Decide if timer should pause or just switch counting
-
             if (activeFreeTimer === 'affirmative') {
                 if (remainingNegativeSeconds > 0) { // Only switch if the other team has time left
                    activeFreeTimer = 'negative';
                 } else {
-                   // alert('反方時間已用盡！無法切換。');
-                   return; // Do not switch if the other side has no time
+                   // If negative has no time, don't switch but show message
+                   document.getElementById('currentFreeSpeaker').textContent = '反方時間用盡';
+                   return;
                 }
             } else { // activeFreeTimer === 'negative'
                 if (remainingAffirmativeSeconds > 0) { // Only switch if the other team has time left
                    activeFreeTimer = 'affirmative';
                 } else {
-                    // alert('正方時間已用盡！無法切換。');
-                    return; // Do not switch if the other side has no time
+                   // If affirmative has no time, don't switch but show message
+                   document.getElementById('currentFreeSpeaker').textContent = '正方時間用盡';
+                   return;
                 }
             }
             updateFreeSpeakerDisplay();
-             // Optionally restart timer immediately after switching if it was running
-             // if (!timerInterval && isTimerRunning) {
-             //     startTimer();
-             // }
-
         }
     </script>
 </body>
